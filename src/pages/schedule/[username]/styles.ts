@@ -4,7 +4,6 @@ export const Container = styled("div", {
 	maxWidth: 852,
 	padding: "0 $4",
 	margin: "$20 auto $4",
-	//border: "1px solid red",
 });
 
 export const UserHeader = styled("div", {
@@ -14,7 +13,6 @@ export const UserHeader = styled("div", {
 	justifyContent: "center",
 
 	[`> ${Heading}`]: {
-		//estilize somente o heading dentro de UserHeader
 		lineHeight: "$base",
 		marginTop: "$2",
 	},

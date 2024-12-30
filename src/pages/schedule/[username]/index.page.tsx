@@ -3,6 +3,7 @@ import { Container, UserHeader } from "./styles";
 import { GetStaticPaths, GetStaticProps } from "next";
 import { prisma } from "@/lib/prisma";
 import { ScheduleForm } from "./ScheduleForm";
+import { NextSeo } from "next-seo";
 
 interface IScheduleProps {
 	user: {
@@ -13,24 +14,25 @@ interface IScheduleProps {
 }
 
 export default function Schedules({ user }: IScheduleProps) {
-	//console.log(user);
-
 	return (
-		<Container>
-			<UserHeader>
-				<Avatar src={user.avatarUrl} />
-				<Heading>{user.name}</Heading>
-				<Text>{user.bio}</Text>
-			</UserHeader>
+		<>
+			<NextSeo title={`Agendar com ${user.name} | Ignite Call`} />
+			<Container>
+				<UserHeader>
+					<Avatar src={user.avatarUrl} />
+					<Heading>{user.name}</Heading>
+					<Text>{user.bio}</Text>
+				</UserHeader>
 
-			<ScheduleForm />
-		</Container>
+				<ScheduleForm />
+			</Container>
+		</>
 	);
 }
 
 export const getStaticPaths: GetStaticPaths = async () => {
 	return {
-		paths: [], //vamos deixar o array vazio para ele ñ gerar nenhuma pg estática no momento da build do next, e sim gerar conforme os usuários forem acessando essa pg.
+		paths: [],
 		fallback: "blocking",
 	};
 };
@@ -46,7 +48,6 @@ export const getStaticProps: GetStaticProps = async ({ params }) => {
 
 	if (!user) {
 		return { notFound: true };
-		//esse notFound é o status 404(erro 404), mostrando aqla pg 404 do next (q inclusive é customizável, basta criar um arq 404 na pasta pages)
 	}
 
 	return {
@@ -57,6 +58,6 @@ export const getStaticProps: GetStaticProps = async ({ params }) => {
 				avatarUrl: user.avatar_url,
 			},
 		},
-		revalidate: 60 * 60 * 24, //1day
+		revalidate: 60 * 60 * 24,
 	};
 };

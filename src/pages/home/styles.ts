@@ -1,7 +1,6 @@
 import { Heading, Text, styled } from "@ignite-ui/react";
 
 export const Container = styled("div", {
-	//esse calculo dá a sobra (minha tela menos o conteudo)
 	maxWidth: "calc(100vw - (100vw - 1160px) / 2)",
 	height: "100vh",
 	marginLeft: "auto",

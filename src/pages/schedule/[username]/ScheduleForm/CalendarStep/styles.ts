@@ -25,7 +25,6 @@ export const Container = styled(Box, {
 });
 
 export const TimePicker = styled("div", {
-	//border: "1px solid red",
 	borderLeft: "1px solid $gray600",
 	padding: "$6 $6 0",
 	display: "flex",
@@ -52,7 +51,6 @@ export const TimePickerList = styled("div", {
 	gridTemplateColumns: "1fr",
 	gap: "$2",
 
-	//poderíamos usar display: flex tranquilo. mas quando a tela for menor q 900px, vai ter 2 colunas de horários
 	"@media(max-width:900px)": {
 		gridTemplateColumns: "repeat(2, 1fr)",
 	},

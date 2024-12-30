@@ -5,8 +5,9 @@ generator client {
 }
 
 datasource db {
-  provider = "mysql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DATABASE_DIRECT_URL")
 }
 
 model User {
@@ -67,7 +68,7 @@ model UserTimeInterval {
   @@map("user_time_intervals")
 }
 
-//vamos salvar o horario da data inteira( de 1 em 1 hora; e ñ horário quebrado)
+//vamos salvar o horário da data inteira( de 1 em 1 hora; e ñ horário quebrado)
 model scheduling {
   id           String   @id @default(uuid())
   date         DateTime

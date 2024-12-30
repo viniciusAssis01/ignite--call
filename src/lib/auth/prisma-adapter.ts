@@ -3,14 +3,12 @@ import { prisma } from "../prisma";
 import { NextApiRequest, NextApiResponse, NextPageContext } from "next";
 import { parseCookies, destroyCookie } from "nookies";
 
-//a tipagem do que essa função retorna, vem da propria lib nextauth
 export function PrismaAdapter(
 	req: NextApiRequest | NextPageContext["req"],
 	res: NextApiResponse | NextPageContext["res"]
 ): Adapter {
 	return {
 		async createUser(user) {
-			//a gente passa como argumento desse método um objeto, q vai ter a propriedade req q é igual a req (lembra q req é para resgatar os cookies). estamos renomeando o nosso "@igniteCall..." para userIdOnCookies
 			const { "@igniteCall:userId": userIdOnCookies } = parseCookies({ req });
 
 			if (!userIdOnCookies) {
@@ -28,12 +26,10 @@ export function PrismaAdapter(
 				},
 			});
 
-			//apos o usuario fazer login social, podemos apagar o cookie (ja q ele ñ vai mais ser utilizado). para isso vamos importar da lib nookies, o método destroyCookie > ele recebe como 1ºargumento o res (o res é onde criamos, modificamos ou deletamos os cookies) > e como 2ºargumento, vamos passar (como string) o nome do cookie q queremos deletar > como 3ºargumento um objeto com a propriedade path, cujo valor  ser a string "/" q significa q vai deleter esse cookie para todas as paginas (vai ser um delete global).
 			destroyCookie({ res }, "@igniteCall:userId", {
 				path: "/",
 			});
 
-			//agora vamos retornar o usuario atualizado dentro do prisma
 			return {
 				id: prismaUser.id,
 				name: prismaUser.name,
@@ -87,7 +83,6 @@ export function PrismaAdapter(
 		},
 
 		async getUserByAccount({ providerAccountId, provider }) {
-			//antes estavamos desestruturando, mas se ñ encontrar ñ vai dar para fazer a desestruturação
 			const account = await prisma.account.findUnique({
 				where: {
 					provider_provider_account_id: {
@@ -96,7 +91,6 @@ export function PrismaAdapter(
 					},
 				},
 				include: {
-					//junto com a account vai trazer o usuario
 					user: true,
 				},
 			});
@@ -137,10 +131,7 @@ export function PrismaAdapter(
 				emailVerified: prismaUser,
 				avatar_url: prismaUser.avatar_url!,
 			};
-			//se colocamos o parametro user como valor de algumas propriedades retornada nessa função vai dar erro. pois user é o usuario antes da atualização. prismaUser é o user é o usuario os os dados alterados.
 		},
-
-		//async deleteUser(userId) {},
 
 		async linkAccount(account) {
 			await prisma.account.create({
@@ -159,8 +150,6 @@ export function PrismaAdapter(
 				},
 			});
 		},
-
-		//async unlinkAccount({ providerAccountId, provider }) {},
 
 		async createSession({ sessionToken, userId, expires }) {
 			await prisma.session.create({
@@ -236,9 +225,5 @@ export function PrismaAdapter(
 				},
 			});
 		},
-
-		//async createVerificationToken({ identifier, expires, token }) {},
-
-		//async useVerificationToken({ identifier, token }) {},
 	};
 }
