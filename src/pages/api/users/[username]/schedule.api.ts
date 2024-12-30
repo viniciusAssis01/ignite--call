@@ -32,14 +32,12 @@ export default async function handle(
 		date: z.string().datetime(),
 	});
 
-	//precisamos de uma inf q ñ está no formulário, q é a data de agendamento.
 	const { name, email, observations, date } = createSchedulingBody.parse(
 		req.body
 	);
 
 	const schedulingDate = dayjs(date).startOf("hour");
 
-	//verificar se a data já ñ passou
 	if (schedulingDate.isBefore(new Date())) {
 		return res.status(400).json({
 			message: "Date is in the past.",
@@ -70,38 +68,26 @@ export default async function handle(
 	});
 
 	const calendar = google.calendar({
-		//precisamos passar os seguintes parâmetros.
-		version: "v3", //essa é a unica versão possivel
+		version: "v3",
 		auth: await getGoogleOAuthToken(user.id),
 	});
 
-	//registrar um evento na api do google calendario
 	await calendar.events.insert({
-		//qndo fazemos integração com o calendario do google, o usuario tem 2 opções: qual calendario ele quer utilizar (criar um calendario personalizado dentro da agenda dele só para os eventos do igniteCall). mas como ñ criamos esse select (de selecioanr qual dos calendarios) vamos usar a opção primary q pega o calendario principal
 		calendarId: "primary",
-		conferenceDtaVersion: 1, //habilita para enviar a conferenceData (q definimos lá em baixo)
+		conferenceDataVersion: 1,
 		requestBody: {
-			//precisa ter todas as inf relacionadas ao evento em si.
-			summary: `Ignite Call: ${name}`, //nome do usuario q pediu uma agenda com um outro usuario.
+			summary: `Ignite Call: ${name}`,
 			description: observations,
 			start: {
-				//horario start
-				dateTime: schedulingDate.format(), ///formata para o modelo ISO
+				dateTime: schedulingDate.format(),
 			},
 			end: {
-				//horario end
-				dateTime: schedulingDate.add(1, "hour").format(), //nossa regra de negocio é q o horário final vai ser 1h apos o horário de inicio, vamos adicionar 1h
+				dateTime: schedulingDate.add(1, "hour").format(),
 			},
-			attendees: [
-				//quem vai estar convidado para o evento
-				//no caso vamos colocar os outros usuarios
-				{ email, displayName: name },
-			],
+			attendees: [{ email, displayName: name }],
 			conferenceData: {
-				//serve para conseguir criar o evento ja com uma chamada no googleMeet
 				createRequest: {
-					//para criar a chamada no google meet no momento q criarmos esse evento na agenda do usuário.
-					requestId: scheduling.id, //precisa ser único
+					requestId: scheduling.id,
 					conferenceSolutionKey: {
 						type: "hangoutsMeet",
 					},
@@ -109,6 +95,30 @@ export default async function handle(
 			},
 		},
 	});
+
+	/* await calendar.events.insert({
+		calendarId: "primary",
+		conferenceDtaVersion: 1,
+		requestBody: {
+			summary: `Ignite Call: ${name}`,
+			description: observations,
+			start: {
+				dateTime: schedulingDate.format(),
+			},
+			end: {
+				dateTime: schedulingDate.add(1, "hour").format(),
+			},
+			attendees: [{ email, displayName: name }],
+			conferenceData: {
+				createRequest: {
+					requestId: scheduling.id,
+					conferenceSolutionKey: {
+						type: "hangoutsMeet",
+					},
+				},
+			},
+		},
+	}); */
 
 	return res.status(201).end();
 }
