@@ -8,11 +8,9 @@ export default async function handler(
 ) {
 	if (req.method !== "POST") {
 		return res.status(405).end();
-		//esse ".end()" diferente do ".send()" ou do ".json()" ele envia a resposta sem nenhum corpo - adicionar no resumo backend
 	}
 
 	const { name, username } = req.body;
-	//agora vamos usar o prisma para cadastrar o usuario no DB.
 
 	const userExists = await prisma.user.findUnique({
 		where: {

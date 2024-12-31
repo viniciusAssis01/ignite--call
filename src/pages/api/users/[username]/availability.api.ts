@@ -1,6 +1,9 @@
 import { prisma } from "@/lib/prisma";
 import dayjs from "dayjs";
 import { NextApiRequest, NextApiResponse } from "next";
+import utc from "dayjs/plugin/utc";
+
+dayjs.extend(utc);
 
 export default async function handle(
 	req: NextApiRequest,
@@ -10,14 +13,13 @@ export default async function handle(
 		return res.status(405).end();
 	}
 
-	//ñ existe params dentro do backend next, por isso usamos o query (q retorna tantos os dados q sao enviado via parametro "[nome do arq]" como tbm o query params [EX: http://localhost:333?username=vinicius])
 	const username = String(req.query.username);
-	//vai vir do query params
-	const { date } = req.query;
-	//http://localhost:3333/api/users/diegosf/availability?date=22-12-20
+	const { date, timezoneOffset } = req.query; //
 
-	if (!date) {
-		return res.status(400).json({ message: "Date not provide." });
+	if (!date || !timezoneOffset) {
+		return res
+			.status(400)
+			.json({ message: "Date or timezoneOffset not provide." });
 	}
 
 	const user = await prisma.user.findUnique({
@@ -30,8 +32,15 @@ export default async function handle(
 		return res.status(400).json({ message: "User does not exist." });
 	}
 
-	//qndo recuperamos alguma inf do req.query, pode retornar um array de string (pois pode ser enviados varios query params). assim transformarmos o array de um unico elemento em string.
 	const referenceDate = dayjs(String(date));
+
+	const timezoneOffsetInHours =
+		typeof timezoneOffset === "string"
+			? Number(timezoneOffset) / 60
+			: Number(timezoneOffset[0]) / 60;
+
+	const referenceDateTimezoneOffsetIHours =
+		referenceDate.toDate().getTimezoneOffset() / 60;
 
 	const isPastDate = referenceDate.endOf("day").isBefore(new Date());
 
@@ -39,7 +48,6 @@ export default async function handle(
 		return res.json({ possibleTimes: [], availability: [] });
 	}
 
-	//agora vamos fazer um cruzamento de dados entre as tabelas timeInterval e schedules.
 	const userAvailability = await prisma.userTimeInterval.findFirst({
 		where: {
 			user_id: user.id,
@@ -56,14 +64,11 @@ export default async function handle(
 	const startHour = time_start_in_minutes / 60;
 	const endHour = time_end_in_minutes / 60;
 
-	//criar um array contendo os intervalos de tempo disponível.
 	const possibleTimes = Array.from({
 		length: endHour - startHour,
 	}).map((_, i) => {
 		return startHour + i;
 	});
-
-	///verificar se ja existe um agendamento ja marcadado em um dos horarios items do array acima nesse dia especifico.
 
 	const blockedTimes = await prisma.scheduling.findMany({
 		select: {
@@ -72,19 +77,28 @@ export default async function handle(
 		where: {
 			user_id: user.id,
 			date: {
-				gte: referenceDate.set("hour", startHour).toDate(),
-				lte: referenceDate.set("hour", endHour).toDate(),
+				gte: referenceDate
+					.set("hour", startHour)
+					.add(timezoneOffsetInHours, "hours")
+					.toDate(),
+				lte: referenceDate
+					.set("hour", endHour)
+					.add(timezoneOffsetInHours, "hours")
+					.toDate(),
 			},
 		},
 	});
 
-	//verifica se ñ ha nenhum registre na tabela scheduling onde o time bate com a hora do agendamento.
 	const availableTimes = possibleTimes.filter((time) => {
 		const isTimeBlocked = blockedTimes.some(
-			(blockedTime) => blockedTime.date.getHours() === time
+			(blockedTime) =>
+				blockedTime.date.getUTCHours() - timezoneOffsetInHours === time
 		);
 
-		const isTimeInPast = referenceDate.set("hour", time).isBefore(new Date());
+		const isTimeInPast = referenceDate
+			.set("hour", time)
+			.subtract(referenceDateTimezoneOffsetIHours, "hours")
+			.isBefore(dayjs().utc().subtract(timezoneOffsetInHours, "hours"));
 
 		return !isTimeBlocked && !isTimeInPast;
 	});

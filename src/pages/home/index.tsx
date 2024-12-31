@@ -1,7 +1,6 @@
 import { Heading, Text } from "@ignite-ui/react";
 import { Container, Hero, Preview } from "./styles";
 import Image from "next/image";
-
 import previewImage from "../../assets/app-preview.svg";
 import { ClaimUserNameForm } from "./components/ClaimUserNameForm";
 import { NextSeo } from "next-seo";

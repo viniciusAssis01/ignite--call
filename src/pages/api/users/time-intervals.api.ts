@@ -18,7 +18,6 @@ export default async function handler(
 	req: NextApiRequest,
 	res: NextApiResponse
 ) {
-	//essa é uma rota que vai ser chamada para CADASTRAR os intervalos de tempo q o usuário tem de disponibilidade.
 	if (req.method !== "POST") {
 		return res.status(405).end();
 	}
@@ -30,12 +29,10 @@ export default async function handler(
 		buildNextAuthOptions(req, res)
 	);
 
-	//sessão é quando o usuário está logado ou ñ (se tiver logado,terá uma sessão; caso contrario, ñ)
 	if (!session) {
 		return res.status(401).end();
 	}
 
-	//caso o body ñ venha no formato desse schama,o parse dispara um erro, então ñ precisamos nos preocupar com qlq tipo de if()
 	const { intervals } = timeIntervalsBodySchema.parse(req.body);
 
 	//vamos criar varios intervalos de uma vez. mas o sqlite ñ permite que trabalhamos com insert multiplo
